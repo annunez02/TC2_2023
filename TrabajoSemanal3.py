@@ -46,6 +46,8 @@ plt.close('all')
 bodePlot(T_nor, fig_id = 1)
 pzmap(T_nor, fig_id = 2) #S plane pole/zero plot
 
+# Nota: al graficar la transferencia desnormalizada me queda mal la escala de magnitud y no logra apreciarse
+
 bodePlot(T, fig_id = 3)    
 pzmap(T, fig_id = 4) #S plane pole/zero plot
     
