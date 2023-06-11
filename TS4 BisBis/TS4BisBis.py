@@ -35,13 +35,13 @@ HBP = TransferFunction(numBP, denBP)
 #-----------------------------Visualizacion----------------------------
 
 # -------- LP --------
-
+print("HLP(s): ")
 pretty_print_SOS(LP_sos, mode='omegayq')
 print("zLP = ", zLP, "\n", "pLP = ", pLP, "\n", "kLP =", kLP)
 analyze_sys(HLP, "Cheby LP")
 
 # -------- BP --------
-
+print("HBP(s): ")
 pretty_print_SOS(BP_sos, mode='omegayq')
 print("zBP = ", zBP, "\n", "pBP = ", pBP, "\n", "kBP =", kBP)
 analyze_sys(HBP, "Cheby BP", same_figs=False)
