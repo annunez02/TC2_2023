@@ -16,7 +16,7 @@ L1 = 1.5
 C2 = 4/3
 L3= 0.5
 
-Z_C2, Z_L1, Z_L3 = sp.symbols('Z_C2 Z_L1 Z_L3', complex=True)
+Z_C2, Z_L1, Z_L3 = sp.symbols('Z_C2 Z_L1 Z_L3', real=True)
 R1 = sp.symbols('R1', real=True, positive=True)
 
 #---------------------------Definicion de matrices--------------------------
