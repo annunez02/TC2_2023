@@ -3,35 +3,35 @@ import scipy.signal as ss
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pytc2.sistemas_lineales import pzmap, GroupDelay, bodePlot, analyze_sys
+from pytc2.sistemas_lineales import pzmap, GroupDelay, bodePlot, analyze_sys, pretty_print_SOS
 
-# Definicion de los valores para la simulacion de la transferencia normalizada
-Q = 1/np.sqrt(2)
-w0 = 0.01
+# Definicion de parámetros
+fs1 = 10000
+fs2 = 10
+n = 2
 
-all_sys = []
+# Obtencion de la transferencia butter normalizada
+zz, pp, kk = ss.buttap(N=n)
 
-# Definicion de la función transferencia normalizada pasa bajos
+num, den = ss.zpk2tf(zz, pp, kk)
+TF = ss.TransferFunction(num, den)
 
-num_nor = [1, 0, 1.25]
-den_nor = [1, 1/Q, 1]
+# Aplicacion de la transformada bilineal para la obtencion del filtro digital
 
-H_norLP = ss.TransferFunction(num_nor, den_nor)
+z, p, k = ss.bilinear_zpk(zz, pp, kk, fs1)
 
-# Definicion de la función transferencia pasa bajos 
+numz , denz = ss.zpk2tf(z, p, k)
+TFZ = ss.TransferFunction(numz, denz)
+#w, HTFZ = ss.freqz(b=numz, a=denz, fs=fs2)
 
-[numLP, denLP] = ss.butter(2, 1, btype='low', analog=False, output='ba', fs=100)
-H_LP = ss.TransferFunction(numLP, denLP)
+# Repito para fs = 10
 
+z_, p_, k_ = ss.bilinear_zpk(zz, pp, kk, fs2)
 
-all_sys.append(H_norLP)
-all_sys.append(H_LP)
-# Visualizacion
+numz_ , denz_ = ss.zpk2tf(z_, p_, k_)
+TFZ_ = ss.TransferFunction(numz_, denz_)
+#w_, HTFZ_ = ss.freqz(b=numz_, a=denz_, fs=fs2)
 
-plt.close('all')
-
-analyze_sys(all_sys, ['H_norLP', 'H_LP'])
-   
-
-  
-#analyze_sys(H_HP, sys_name='pasa altos tercer orden Q={:d}'.format(Q))  
+# Visualizo
+analyze_sys(TFZ, digital = True, sys_name='TFZ fs = 1K')
+analyze_sys(TFZ_, digital = True, sys_name='TFZ fs = 10')
