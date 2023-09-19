@@ -52,8 +52,6 @@ wp1 = 3.0 #Hz
 wp2 = 25.0 #Hz
 ws2 = 35.0 #Hz
 
-# A partir de aca empiezo a crear
-
 # -----------------------------------------IIR---------------------------------------------
 
 system = sig.iirdesign(wp = [wp1, wp2], ws = [ws1, ws2], gpass = ripple, gstop = atenuacion, analog = False, ftype = 'butter', output = 'sos', fs = 1000)
@@ -101,6 +99,23 @@ plt.title('Retardo de grupo del filtro IIR')
 plt.ylabel('Group delay [samples]')
 plt.xlabel('Frequency [rad/sample]')
 plt.grid()
+
+
+#------------------------ Respuesta al impulso del filtro IIR ------------------------
+
+impulse = sig.unit_impulse(2000)
+response = sig.sosfilt(system, impulse)
+
+plt.plot(np.linspace(0,1, 2000), response * 10) # Para que se vea mas claro en el gráfico
+plt.plot(np.linspace(0,1, 2000), impulse)
+#plt.xlim([0,0.2])
+
+plt.xlabel('Time [samples]')
+plt.ylabel('Amplitude')
+plt.title('Respuesta al impulso del filtro IIR (x10)')
+
+plt.grid(True)
+plt.show()
 
 # -----------------------------------------FIR---------------------------------------------
 
@@ -172,4 +187,155 @@ plt.grid()
 plt.axis([0, nyq_frec, 0, 5000])
 
 
+#------------------------ Respuesta al impulso del filtro FIR ------------------------
+
+impulse = sig.unit_impulse(3000)
+response = sig.lfilter(num_win, den, impulse)
+
+plt.plot(np.linspace(0, 1, 3000), response * (10 ** 5)) # Para que se vea mas claro en el gráfico
+plt.plot(np.linspace(0, 1, 3000), impulse)
+#plt.xlim([0,0.2])
+
+plt.xlabel('Time [samples]')
+plt.ylabel('Amplitude')
+plt.title('Respuesta al impulso del filtro FIR')
+
+plt.grid(True)
+plt.show()
+
  
+#####################################
+#                                   #
+#               Parte 2             #
+#                                   #
+##################################### 
+
+
+# IIR
+# ECG_f_IIR = sig.sosfilt(system, ecg_one_lead)
+
+# FIR
+ECG_f_FIR = sig.lfilter(num_win, den, ecg_one_lead)
+
+# Calcule la demora para cada caso, dicha demora adelantará la señal de salida, como puede ver más abajo.
+demora = int (gd[0])
+
+
+# -------------------------- Segmentos de interés con ALTA contaminación ---------------------------
+
+regs_interes = ( 
+        np.array([5, 5.2])   * 60 * fs, # minutos a muestras
+        np.array([12, 12.4]) * 60 * fs, # minutos a muestras
+        np.array([15, 15.2]) * 60 * fs, # minutos a muestras
+        )
+
+for ii in regs_interes:
+    
+    # intervalo limitado de 0 a cant_muestras
+    zoom_region = np.arange(np.max([0, ii[0]]), np.min([cant_muestras, ii[1]]), dtype='uint')
+    
+    plt.figure(figsize=(fig_sz_x, fig_sz_y), dpi= fig_dpi, facecolor='w', edgecolor='k')
+    plt.plot(zoom_region, ecg_one_lead[zoom_region], label='ECG', linewidth=2)
+    #plt.plot(zoom_region, ECG_f_butt[zoom_region], label='Butter')
+    plt.plot(zoom_region, ECG_f_FIR[zoom_region + demora], label='FIR')
+    
+    plt.title('ECG filtering example from ' + str(ii[0]) + ' to ' + str(ii[1]) )
+    plt.ylabel('Adimensional')
+    plt.xlabel('Muestras (#)')
+    
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    axes_hdl.set_yticks(())
+            
+    plt.show()
+    
+
+# ------------------------- Análisis para latidos con baja contaminación --------------------------
+
+regs_interes = ( 
+        [4000, 5500], # muestras
+        [10e3, 11e3], # muestras
+        )
+
+for ii in regs_interes:
+    
+    # intervalo limitado de 0 a cant_muestras
+    zoom_region = np.arange(np.max([0, ii[0]]), np.min([cant_muestras, ii[1]]), dtype='uint')
+    
+    plt.figure(figsize=(fig_sz_x, fig_sz_y), dpi= fig_dpi, facecolor='w', edgecolor='k')
+    plt.plot(zoom_region, ecg_one_lead[zoom_region], label='ECG', linewidth=2)
+    #plt.plot(zoom_region, ECG_f_butt[zoom_region], label='Butter')
+    plt.plot(zoom_region, ECG_f_FIR[zoom_region + demora], label='FIR')
+    
+    plt.title('ECG filtering example from ' + str(ii[0]) + ' to ' + str(ii[1]) )
+    plt.ylabel('Adimensional')
+    plt.xlabel('Muestras (#)')
+    
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    axes_hdl.set_yticks(())
+            
+    plt.show()
+    
+    
+# ------------------------------------- Filtrado bidireccional -------------------------------------
+# -------------------------- Segmentos de interés con ALTA contaminación ---------------------------
+
+# Procedemos al filtrado
+# ECG_f_butt = sig.sosfiltfilt(bp_sos_butter, ecg_one_lead)
+
+ECG_f_FIR = sig.filtfilt(num_win, den, ecg_one_lead)
+
+# Segmentos de interés
+regs_interes = ( 
+        np.array([5, 5.2])   * 60 * fs, # minutos a muestras
+        np.array([12, 12.4]) * 60 * fs, # minutos a muestras
+        np.array([15, 15.2]) * 60 * fs, # minutos a muestras
+        )
+
+for ii in regs_interes:
+    
+    # intervalo limitado de 0 a cant_muestras
+    zoom_region = np.arange(np.max([0, ii[0]]), np.min([cant_muestras, ii[1]]), dtype='uint')
+    
+    plt.figure(figsize=(fig_sz_x, fig_sz_y), dpi= fig_dpi, facecolor='w', edgecolor='k')
+    plt.plot(zoom_region, ecg_one_lead[zoom_region], label='ECG', lw=2)
+    #plt.plot(zoom_region, ECG_f_butt[zoom_region], label='Butter')
+    plt.plot(zoom_region, ECG_f_FIR[zoom_region], label='FIR')
+    
+    plt.title('ECG filtering example from ' + str(ii[0]) + ' to ' + str(ii[1]) )
+    plt.ylabel('Adimensional')
+    plt.xlabel('Muestras (#)')
+    
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    axes_hdl.set_yticks(())
+            
+    plt.show()
+    
+# ------------------------- Análisis para latidos con baja contaminación --------------------------
+    
+regs_interes = ( 
+        [4000, 5500], # muestras
+        [10e3, 11e3], # muestras
+        )
+
+for ii in regs_interes:
+    
+    # intervalo limitado de 0 a cant_muestras
+    zoom_region = np.arange(np.max([0, ii[0]]), np.min([cant_muestras, ii[1]]), dtype='uint')
+    
+    plt.figure(figsize=(fig_sz_x, fig_sz_y), dpi= fig_dpi, facecolor='w', edgecolor='k')
+    plt.plot(zoom_region, ecg_one_lead[zoom_region], label='ECG', lw=2)
+    #plt.plot(zoom_region, ECG_f_butt[zoom_region], label='Butter')
+    plt.plot(zoom_region, ECG_f_FIR[zoom_region], label='FIR')
+    
+    plt.title('ECG filtering example from ' + str(ii[0]) + ' to ' + str(ii[1]) )
+    plt.ylabel('Adimensional')
+    plt.xlabel('Muestras (#)')
+    
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    axes_hdl.set_yticks(())
+            
+    plt.show()
