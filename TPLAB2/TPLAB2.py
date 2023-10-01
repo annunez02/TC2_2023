@@ -23,7 +23,7 @@ gains = 10**(gains/20)
 num = sig.firls(5001, bands=frecs, desired=gains, weight=None, fs=fs)
 den = 1.0
 
-w  = np.append(np.logspace(-1, 0.8, 300), np.logspace(0.9, 1.6, 300) )
+w  = np.append(np.logspace(-1, 0.8, 250), np.logspace(0.9, 1.6, 250) )
 w  = np.append(w, np.linspace(110, nyq_frec, 100, endpoint=True) ) / nyq_frec * np.pi
 
 
@@ -43,7 +43,7 @@ plt.figure()
 plt.plot(w, 20 * np.log10(abs(TF_FIR)), label='FIR-Win {:d}'.format(num.shape[0]))
 
 plt.title('Filtro FIR')
-plt.xlabel('Frecuencia [Hz]')
+plt.xlabel('Frecuencia [KHz]')
 plt.ylabel('Módulo [dB]')
 plt.grid()
 plt.axis([0, 20, -30, 20 ])
