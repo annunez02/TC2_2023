@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.io as sio
+import pandas   as pd
 from pytc2.sistemas_lineales import plot_plantilla
 
 fs = 40.0   # KHz
@@ -20,35 +21,21 @@ frecs = np.array([    0.0,      wp1,             ws1,            ws2,       wp2,
 gains = np.array([-ripple,  -ripple,     -atenuacion,    -atenuacion,   -ripple,      -ripple ])
 gains = 10**(gains/20)
 
-num = sig.firls(5001, bands=frecs, desired=gains, weight=None, fs=fs)
+num = sig.firls(201, bands=frecs, desired=gains, weight=None, fs=fs)
+print(f"num: {num}")
+df = pd.DataFrame({'num': num})
+df.to_csv("FIR_LSQR.csv", index=False, encoding='utf-8-sig')
 den = 1.0
 
-w  = np.append(np.logspace(-1, 0.8, 250), np.logspace(0.9, 1.6, 250) )
-w  = np.append(w, np.linspace(110, nyq_frec, 100, endpoint=True) ) / nyq_frec * np.pi
-
-
-_, TF_FIR = sig.freqz(num, den, w)
+w, TF_FIR = sig.freqz(num, den, fs=fs)
 
 # Renormalizo el eje de frecuencia
+w_hz = w / (2 * np.pi)
 
-w = w / np.pi * nyq_frec
-
-phase = np.angle(TF_FIR)
-wg, gd = sig.group_delay((num, den), w = 2000, whole = False, fs = fs)
-
-# ----- Modulo -----
-
-plt.figure()
-
-plt.plot(w, 20 * np.log10(abs(TF_FIR)), label='FIR-Win {:d}'.format(num.shape[0]))
-
-plt.title('Filtro FIR')
-plt.xlabel('Frecuencia [KHz]')
-plt.ylabel('Módulo [dB]')
-plt.grid()
-plt.axis([0, 20, -30, 20 ])
-
-axes_hdl = plt.gca()
-axes_hdl.legend()
-
-plot_plantilla(filter_type = 'bandstop', fpass = [wp1, wp2], ripple = ripple , fstop = [ws1, ws2], attenuation = atenuacion, fs = fs)
+# Plot the magnitude response in dB
+plt.plot(w_hz, 20 * np.log10(np.abs(TF_FIR)))
+plt.grid(True)
+plt.ylim(-50, 10)
+plt.xlabel('Normalized Frequency (Hz)')
+plt.ylabel('Magnitude (dB)')
+plt.show()
